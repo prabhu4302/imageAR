@@ -7,6 +7,7 @@ const TEXTS_FILE = path.join(__dirname, 'data', 'texts.json');
 
 app.use(express.static('public'));
 app.use(express.json());
+app.listen(3000, '0.0.0.0');
 
 // Ensure data folder exists
 if (!fs.existsSync(TEXTS_FILE)) {
