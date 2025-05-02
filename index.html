@@ -1,0 +1,58 @@
+<!-- public/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Image Text Analyzer</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    #output { white-space: pre-wrap; background: #f0f0f0; padding: 10px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Image Text Analyzer</h1>
+  <input type="file" id="imageInput" accept="image/*" />
+  <button onclick="analyzeImage()">Read & Save Text</button>
+  <h3>Extracted Text:</h3>
+  <div id="output">Text will appear here...</div>
+  <h3>Saved Entries:</h3>
+  <div id="savedTexts"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4"></script>
+  <script>
+    let image;
+
+    document.getElementById("imageInput").addEventListener("change", e => {
+      image = e.target.files[0];
+    });
+
+    function analyzeImage() {
+      if (!image) return alert("Please select an image");
+
+      Tesseract.recognize(image, 'eng').then(({ data: { text } }) => {
+        document.getElementById("output").textContent = text;
+
+        fetch('/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        })
+        .then(() => loadSavedTexts())
+        .catch(err => console.error("Save error:", err));
+      });
+    }
+
+    function loadSavedTexts() {
+      fetch('/texts')
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById("savedTexts").innerHTML = data.map((t, i) =>
+            `<p><strong>Entry ${i + 1}:</strong><br>${t}</p>`).join('');
+        });
+    }
+
+    // Load saved texts on startup
+    loadSavedTexts();
+  </script>
+</body>
+</html>
